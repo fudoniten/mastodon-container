@@ -4,6 +4,18 @@ with lib;
 let
   cfg = config.services.mastodonContainer;
 
+  hostSecrets = config.fudo.secrets.host-secrets."${config.instance.hostname}";
+
+  makeEnvFile = envVars:
+    let
+      envLines =
+        mapAttrsToList (var: val: ''${var}="${toString val}"'') envVars;
+    in pkgs.writeText "envFile" (concatStringsSep "\n" envLines);
+
+  databasePasswd = readFile
+    (pkgs.lib.passwd.stablerandom-passwd-file "mastodon-db-passwd"
+      config.instance.build-seed);
+
   proxyConf = pkgs.writeText "mastodon-nginx.conf" ''
     http {
       upstream backend {
@@ -85,6 +97,17 @@ in {
   options.services.mastodonContainer = with types; {
     enable = mkEnableOption "Enable Mastodon running in an Arion container.";
 
+    hostname = mkOption {
+      type = str;
+      description = "Hostname of this Mastodon instance.";
+    };
+
+    web-domain = mkOption {
+      type = str;
+      description = "Domain name to attach to users, eg @user@web.domain";
+      default = toplevel.config.services.mastodonContainer.hostname;
+    };
+
     version = mkOption {
       type = str;
       description = "Version of Mastodon to launch.";
@@ -128,6 +151,19 @@ in {
       default = 3000;
     };
 
+    smtp = {
+      server = mkOption {
+        type = str;
+        description = "Outgoing SMTP server.";
+      };
+
+      port = mkOption {
+        type = port;
+        description = "Outgoing SMTP server port.";
+        default = 25;
+      };
+    };
+
     uids = {
       mastodon = mkOption {
         type = int;
@@ -166,6 +202,26 @@ in {
       };
     };
 
+    fudo.secrets.host-secrets."${config.instance.hostname}" = let
+    in {
+      commonEnv = {
+        source-file = makeEnvFile {
+          LOCAL_DOMAIN = cfg.hostname;
+          WEB_DOMAIN = cfg.web-domain;
+          REDIS_HOST = "redis";
+          REDIS_PORT = 6379;
+          DB_USER = "mastodon";
+          DB_NAME = "mastodon";
+          DB_PASS = databasePasswd;
+          SMTP_SERVER = cfg.smtp.server;
+          SMTP_PORT = toString cfg.smtp.port;
+          SMTP_FROM_ADDRESS = "noreply@${cfg.web-domain}";
+        };
+      };
+      postgresEnv = makeEnvFile { DB_HOST = "/var/run/postgresql"; };
+      mastodonEnv = makeEnvFile { DB_HOST = "postgres"; };
+    };
+
     systemd.tmpfiles.rules = [
       "d ${cfg.state-directory}/mastodon 0700 mastodon          root - -"
       "d ${cfg.state-directory}/postgres 0700 mastodon-postgres root - -"
@@ -189,7 +245,7 @@ in {
             depends_on = [ "web" "streaming" ];
             networks = [ "internal_network" "external_network" ];
           };
-          db.service = {
+          postgres.service = {
             image = cfg.images.postgres;
             restart = "always";
             volumes =
@@ -198,6 +254,10 @@ in {
             environment.POSTGRES_HOST_AUTH_METHOD = "trust";
             networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.postgres;
+            env_file = [
+              hostSecrets.commonEnv.target-file
+              hostSecrets.postgresEnv.target-file
+            ];
           };
           redis.service = {
             image = cfg.images.redis;
@@ -206,6 +266,7 @@ in {
             healthcheck.test = [ "CMD" "redis-cli" "ping" ];
             networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.redis;
+            env_file = [ hostSecrets.commonEnv.target-file ];
           };
           web.service = {
             image = cfg.images.mastodon;
@@ -219,9 +280,13 @@ in {
               "CMD-SHELL"
               "wget -q --spider --proxy=off localhost:3000/health || exit 1"
             ];
-            depends_on = [ "db" "redis" ];
+            depends_on = [ "postgres" "redis" ];
             networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.mastodon;
+            env_file = [
+              hostSecrets.commonEnv.target-file
+              hostSecrets.mastodonEnv.target-file
+            ];
           };
           streaming.service = {
             image = cfg.images.mastodon;
@@ -232,8 +297,12 @@ in {
               "CMD-SHELL"
               "wget -q --spider --proxy=off localhost:4000/api/v1/streaming/health || exit 1"
             ];
-            depends_on = [ "db" "redis" ];
+            depends_on = [ "postgres" "redis" ];
             networks = [ "internal_network" ];
+            env_file = [
+              hostSecrets.commonEnv.target-file
+              hostSecrets.mastodonEnv.target-file
+            ];
           };
           sidekiq.service = {
             image = cfg.images.mastodon;
@@ -243,9 +312,13 @@ in {
             command = "bundle exec sidekiq";
             healthcheck.test =
               [ "CMD-SHELL" "ps aux | grep '[s]idekiq 6' || false" ];
-            depends_on = [ "db" "redis" ];
+            depends_on = [ "postgres" "redis" ];
             networks = [ "internal_network" "external_network" ];
             user = mkUserMap cfg.uids.mastodon;
+            env_file = [
+              hostSecrets.commonEnv.target-file
+              hostSecrets.mastodonEnv.target-file
+            ];
           };
         };
       };
