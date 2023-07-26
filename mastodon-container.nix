@@ -113,7 +113,7 @@ in {
       nginx = mkOption {
         type = str;
         description = "Docker image to use for Proxy server.";
-        default = "nginx:1-alpine";
+        default = "nginx:alpine-slim";
       };
     };
 
