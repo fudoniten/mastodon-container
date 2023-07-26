@@ -56,7 +56,7 @@ let
           proxy_redirect off;
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
-          proxy_set_header Connection $connection_upgrade;
+          proxy_set_header Connection "upgrade";
           proxy_cache CACHE;
           proxy_cache_valid 200 7d;
           proxy_cache_valid 410 24h;
