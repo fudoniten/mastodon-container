@@ -7,11 +7,11 @@ let
   proxyConf = pkgs.writeText "mastodon-nginx.conf" ''
     http {
       upstream backend {
-        server mastodon-web:3000 fail_timeout=0;
+        server web:3000 fail_timeout=0;
       }
 
       upstream streaming {
-        server mastodon-streaming:4000 fail_timeout=0;
+        server streaming:4000 fail_timeout=0;
       }
 
       proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=CACHE:10m inactive=7d max_size=1g;
