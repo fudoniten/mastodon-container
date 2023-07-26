@@ -109,6 +109,12 @@ in {
         description = "Docker image to use for Redis server.";
         default = "redis:7-alpine";
       };
+
+      nginx = mkOption {
+        type = str;
+        description = "Docker image to use for Proxy server.";
+        default = "nginx:1-alpine";
+      };
     };
 
     state-directory = mkOption {
@@ -182,7 +188,7 @@ in {
             volumes = [ "${proxyCfg}:/etc/nginx/nginx.conf:ro,Z" ];
             depends_on = [ "web" "streaming" ];
           };
-          postgres.service = {
+          db.service = {
             image = cfg.images.postgres;
             restart = "always";
             volumes =
