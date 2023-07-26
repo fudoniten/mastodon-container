@@ -220,10 +220,8 @@ in {
         target-file = "/run/mastodon/common.env";
       };
       postgresEnv = {
-        source-file = makeEnvFile {
-          DB_HOST = "/var/run/postgresql";
-          target-file = "/run/mastodon/postgres.env";
-        };
+        source-file = makeEnvFile { DB_HOST = "/var/run/postgresql"; };
+        target-file = "/run/mastodon/postgres.env";
       };
       mastodonEnv = {
         source-file = makeEnvFile { DB_HOST = "postgres"; };
