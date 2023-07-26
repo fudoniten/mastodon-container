@@ -32,7 +32,7 @@ let
         add_header Strict-Transport-Security "max-age=31536000" always;
 
         location / {
-          try_files $uri @proxy
+          try_files $uri @proxy;
         }
 
         location ~ ^/(emoji|packs|system/accounts/avatars|system/media_attachments/files) {
