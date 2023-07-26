@@ -1,10 +1,88 @@
 { config, lib, pkgs, ... }@toplevel:
 
 with lib;
-let cfg = config.services.mastodonContainer;
+let
+  cfg = config.services.mastodonContainer;
+
+  proxyConf = pkgs.writeText "mastodon-nginx.conf" ''
+    http {
+      upstream backend {
+        server mastodon-web:3000 fail_timeout=0;
+      }
+
+      upstream streaming {
+        server mastodon-streaming:4000 fail_timeout=0;
+      }
+
+      proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=CACHE:10m inactive=7d max_size=1g;
+
+      server {
+        listen 3000;
+        server_name localhost;
+        server_tokens off;
+
+        gzip on;
+        gzip_disable "msie6";
+        gzip_vary on;
+        gzip_proxied any;
+        gzip_comp_level 6;
+        gzip_buffers 16 8k;
+        gzip_http_version 1.1;
+        gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+
+        location / {
+          try_files $uri @proxy
+        }
+
+        location ~ ^/(emoji|packs|system/accounts/avatars|system/media_attachments/files) {
+          add_header Cache-Control "public, max-age=31536000, immutable";
+          add_header Strict-Transport-Security "max-age=31536000" always;
+          try_files $uri @proxy;
+        }
+
+        location /sw.js {
+          add_header Cache-Control "public, max-age=0";
+          add_header Strict-Transport-Security "max-age=31536000" always;
+          try_files $uri @proxy;
+        }
+
+        location @proxy {
+          proxy_set_header Host $host;
+          proxy_set_header Proxy "";
+          proxy_pass_header Server;
+          proxy_pass http://backend;
+          proxy_buffering on;
+          proxy_redirect off;
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+          proxy_cache CACHE;
+          proxy_cache_valid 200 7d;
+          proxy_cache_valid 410 24h;
+          proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+          add_header X-Cached $upstream_cache_status;
+          add_header Strict-Transport-Security "max-age=31536000" always;
+          tcp_nodelay on;
+        }
+
+        location /api/v1/streaming {
+          proxy_set_header Host $host;
+          proxy_set_header Proxy "";
+          proxy_pass http://streaming;
+          proxy_buffering off;
+          proxy_redirect off;
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+          tcp_nodelay on;
+        }
+      }
+    }
+  '';
 
 in {
-  options.services.mastodonContainer = {
+  options.services.mastodonContainer = with types; {
     enable = mkEnableOption "Enable Mastodon running in an Arion container.";
 
     version = mkOption {
@@ -104,6 +182,13 @@ in {
           external_network.internal = false;
         };
         services = {
+          proxy.service = {
+            image = cfg.images.nginx;
+            restart = "always";
+            ports = [ "${toString cfg.port}:3000" ];
+            volumes = [ "${proxyCfg}:/etc/nginx/nginx.conf:ro,Z" ];
+            depends_on = [ "web" "streaming" ];
+          };
           postgres.service = {
             image = cfg.images.postgres;
             restart = "always";
@@ -123,8 +208,8 @@ in {
             user = mkUserMap cfg.uids.redis;
           };
           web.service = {
-            # TODO: bulid image?
             image = cfg.images.mastodon;
+            hostname = "mastodon-web";
             restart = "always";
             volumes =
               [ "${cfg.state-directory}/mastodon:/mastodon/public/system" ];
@@ -134,20 +219,19 @@ in {
               "CMD-SHELL"
               "wget -q --spider --proxy=off localhost:3000/health || exit 1"
             ];
-            ports = [ "${toString cfg.ports.web}:3000" ];
             depends_on = [ "postgres" "redis" ];
             networks = [ "internal_network" "external_network" ];
             user = mkUserMap cfg.uids.mastodon;
           };
           streaming.service = {
             image = cfg.images.mastodon;
+            hostname = "mastodon-streaming";
             restart = "always";
             command = "node ./streaming";
             healthcheck.test = [
               "CMD-SHELL"
               "wget -q --spider --proxy=off localhost:4000/api/v1/streaming/health || exit 1"
             ];
-            ports = [ "${toString cfg.ports.streaming}:4000" ];
             depends_on = [ "postgres" "redis" ];
             networks = [ "internal_network" "external_network" ];
           };
