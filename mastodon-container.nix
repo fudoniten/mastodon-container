@@ -218,7 +218,7 @@ in {
               "CMD-SHELL"
               "wget -q --spider --proxy=off localhost:3000/health || exit 1"
             ];
-            depends_on = [ "postgres" "redis" ];
+            depends_on = [ "db" "redis" ];
             networks = [ "internal_network" "external_network" ];
             user = mkUserMap cfg.uids.mastodon;
           };
@@ -231,7 +231,7 @@ in {
               "CMD-SHELL"
               "wget -q --spider --proxy=off localhost:4000/api/v1/streaming/health || exit 1"
             ];
-            depends_on = [ "postgres" "redis" ];
+            depends_on = [ "db" "redis" ];
             networks = [ "internal_network" "external_network" ];
           };
           sidekiq.service = {
@@ -242,7 +242,7 @@ in {
             command = "bundle exec sidekiq";
             healthcheck.test =
               [ "CMD-SHELL" "ps aux | grep '[s]idekiq 6' || false" ];
-            depends_on = [ "postgres" "redis" ];
+            depends_on = [ "db" "redis" ];
             networks = [ "internal_network" "external_network" ];
             user = mkUserMap cfg.uids.mastodon;
           };
