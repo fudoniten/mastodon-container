@@ -116,17 +116,10 @@ in {
       description = "Port at which to store server data.";
     };
 
-    ports = {
-      web = mkOption {
-        type = port;
-        description = "Port at which to serve Mastodon web requests.";
-        default = 3000;
-      };
-      streaming = mkOption {
-        type = port;
-        description = "Port at which to serve Mastodon streaming requests.";
-        default = 4000;
-      };
+    port = mkOption {
+      type = port;
+      description = "Port at which to serve Mastodon web requests.";
+      default = 3000;
     };
 
     uids = {
