@@ -187,6 +187,7 @@ in {
             ports = [ "${toString cfg.port}:3000" ];
             volumes = [ "${proxyConf}:/etc/nginx/nginx.conf:ro,Z" ];
             depends_on = [ "web" "streaming" ];
+            networks = [ "internal_network" "external_network" ];
           };
           db.service = {
             image = cfg.images.postgres;
@@ -219,7 +220,7 @@ in {
               "wget -q --spider --proxy=off localhost:3000/health || exit 1"
             ];
             depends_on = [ "db" "redis" ];
-            networks = [ "internal_network" "external_network" ];
+            networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.mastodon;
           };
           streaming.service = {
@@ -232,7 +233,7 @@ in {
               "wget -q --spider --proxy=off localhost:4000/api/v1/streaming/health || exit 1"
             ];
             depends_on = [ "db" "redis" ];
-            networks = [ "internal_network" "external_network" ];
+            networks = [ "internal_network" ];
           };
           sidekiq.service = {
             image = cfg.images.mastodon;
