@@ -217,9 +217,18 @@ in {
           SMTP_PORT = toString cfg.smtp.port;
           SMTP_FROM_ADDRESS = "noreply@${cfg.web-domain}";
         };
+        target-file = "/run/mastodon/common.env";
       };
-      postgresEnv = makeEnvFile { DB_HOST = "/var/run/postgresql"; };
-      mastodonEnv = makeEnvFile { DB_HOST = "postgres"; };
+      postgresEnv = {
+        source-file = makeEnvFile {
+          DB_HOST = "/var/run/postgresql";
+          target-file = "/run/mastodon/postgres.env";
+        };
+      };
+      mastodonEnv = {
+        source-file = makeEnvFile { DB_HOST = "postgres"; };
+        target-file = "/run/mastodon/mastodon.env";
+      };
     };
 
     systemd.tmpfiles.rules = [
