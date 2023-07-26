@@ -89,6 +89,12 @@ in {
       };
     };
 
+    systemd.tmpfiles.rules = [
+      "d ${cfg.state-directory}/mastodon 0700 mastodon          root - -"
+      "d ${cfg.state-directory}/postgres 0700 mastodon-postgres root - -"
+      "d ${cfg.state-directory}/redis    0700 mastodon-redis    root - -"
+    ];
+
     virtualisation.arion.projects.mastodon.settings = let
       mkUserMap = uid: "${toString uid}:${toString uid}";
       image = { pkgs, ... }: {
