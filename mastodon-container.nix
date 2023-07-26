@@ -185,7 +185,7 @@ in {
             image = cfg.images.nginx;
             restart = "always";
             ports = [ "${toString cfg.port}:3000" ];
-            volumes = [ "${proxyCfg}:/etc/nginx/nginx.conf:ro,Z" ];
+            volumes = [ "${proxyConf}:/etc/nginx/nginx.conf:ro,Z" ];
             depends_on = [ "web" "streaming" ];
           };
           db.service = {
