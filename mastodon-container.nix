@@ -215,7 +215,7 @@ in {
 
     fudo.secrets.host-secrets."${config.instance.hostname}" = let
     in {
-      commonEnv = {
+      mastodonCommonEnv = {
         source-file = makeEnvFile {
           LOCAL_DOMAIN = cfg.hostname;
           WEB_DOMAIN = cfg.web-domain;
@@ -229,7 +229,7 @@ in {
         };
         target-file = "/run/mastodon/common.env";
       };
-      postgresEnv = {
+      mastodonPostgresEnv = {
         source-file = makeEnvFile {
           DB_HOST = "/var/run/postgresql";
           POSTGRES_USER = "mastodon";
@@ -282,8 +282,8 @@ in {
             networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.postgres;
             env_file = [
-              hostSecrets.commonEnv.target-file
-              hostSecrets.postgresEnv.target-file
+              hostSecrets.mastodonCommonEnv.target-file
+              hostSecrets.mastodonPostgresEnv.target-file
             ];
           };
           redis.service = {
@@ -293,7 +293,7 @@ in {
             healthcheck.test = [ "CMD" "redis-cli" "ping" ];
             networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.redis;
-            env_file = [ hostSecrets.commonEnv.target-file ];
+            env_file = [ hostSecrets.mastodonCommonEnv.target-file ];
           };
           web.service = {
             image = cfg.images.mastodon;
@@ -311,7 +311,7 @@ in {
             networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.mastodon;
             env_file = [
-              hostSecrets.commonEnv.target-file
+              hostSecrets.mastodonCommonEnv.target-file
               hostSecrets.mastodonEnv.target-file
             ];
           };
@@ -327,7 +327,7 @@ in {
             depends_on = [ "postgres" "redis" ];
             networks = [ "internal_network" ];
             env_file = [
-              hostSecrets.commonEnv.target-file
+              hostSecrets.mastodonCommonEnv.target-file
               hostSecrets.mastodonEnv.target-file
             ];
           };
@@ -343,7 +343,7 @@ in {
             networks = [ "internal_network" "external_network" ];
             user = mkUserMap cfg.uids.mastodon;
             env_file = [
-              hostSecrets.commonEnv.target-file
+              hostSecrets.mastodonCommonEnv.target-file
               hostSecrets.mastodonEnv.target-file
             ];
           };
