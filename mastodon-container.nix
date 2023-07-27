@@ -221,9 +221,6 @@ in {
           WEB_DOMAIN = cfg.web-domain;
           REDIS_HOST = "redis";
           REDIS_PORT = 6379;
-          DB_USER = "mastodon";
-          DB_NAME = "mastodon";
-          DB_PASS = databasePasswd;
           SMTP_SERVER = cfg.smtp.server;
           SMTP_PORT = toString cfg.smtp.port;
           SMTP_FROM_ADDRESS = "noreply@${cfg.web-domain}";
@@ -233,11 +230,21 @@ in {
         target-file = "/run/mastodon/common.env";
       };
       postgresEnv = {
-        source-file = makeEnvFile { DB_HOST = "/var/run/postgresql"; };
+        source-file = makeEnvFile {
+          DB_HOST = "/var/run/postgresql";
+          POSTGRES_USER = "mastodon";
+          POSTGRES_PASSWORD = databasePasswd;
+          POSTGRES_DB = "mastodon";
+        };
         target-file = "/run/mastodon/postgres.env";
       };
       mastodonEnv = {
-        source-file = makeEnvFile { DB_HOST = "postgres"; };
+        source-file = makeEnvFile {
+          DB_HOST = "postgres";
+          DB_USER = "mastodon";
+          DB_NAME = "mastodon";
+          DB_PASS = databasePasswd;
+        };
         target-file = "/run/mastodon/mastodon.env";
       };
     };
