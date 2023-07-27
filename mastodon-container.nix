@@ -179,17 +179,17 @@ in {
       mastodon = mkOption {
         type = int;
         description = "UID as which to run Mastodon.";
-        default = 730;
+        default = 991;
       };
       postgres = mkOption {
         type = int;
         description = "UID as which to run PostgreSQL.";
-        default = 731;
+        default = 992;
       };
       redis = mkOption {
         type = int;
         description = "UID as which to run Redis.";
-        default = 732;
+        default = 993;
       };
     };
   };
@@ -231,7 +231,6 @@ in {
       };
       mastodonPostgresEnv = {
         source-file = makeEnvFile {
-          DB_HOST = "/var/run/postgresql";
           POSTGRES_USER = "mastodon";
           POSTGRES_PASSWORD = databasePasswd;
           POSTGRES_DB = "mastodon";
@@ -278,7 +277,7 @@ in {
             volumes =
               [ "${cfg.state-directory}/postgres:/var/lib/postgresql/data" ];
             healthcheck.test = [ "CMD" "pg_isready" "-U" "postgres" ];
-            environment.POSTGRES_HOST_AUTH_METHOD = "trust";
+            # environment.POSTGRES_HOST_AUTH_METHOD = "trust";
             networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.postgres;
             env_file = [
@@ -299,8 +298,10 @@ in {
             image = cfg.images.mastodon;
             hostname = "mastodon-web";
             restart = "always";
-            volumes =
-              [ "${cfg.state-directory}/mastodon:/mastodon/public/system" ];
+            volumes = [
+              "${cfg.state-directory}/mastodon:/mastodon/public/system"
+              "${cfg.state-directory}/mastodon-opt:/opt"
+            ];
             command = ''
               bash -c "rm -f /mastodon/tmp/pids/server.pid; bundle exec rails s -p 3000"'';
             healthcheck.test = [
