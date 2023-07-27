@@ -16,6 +16,13 @@ let
     (pkgs.lib.passwd.stablerandom-passwd-file "mastodon-db-passwd"
       config.instance.build-seed);
 
+  secretKeyBase = readFile
+    (pkgs.lib.passwd.stablerandom-passwd-file "mastodon-secret-key-base"
+      config.instance.build-seed);
+
+  otpSecret = readFile (pkgs.lib.passwd.stablerandom-passwd-file "mastodon-otp"
+    config.instance.build-seed);
+
   proxyConf = pkgs.writeText "mastodon-nginx.conf" ''
     events {
       worker_connections 1024;
@@ -220,6 +227,8 @@ in {
           SMTP_SERVER = cfg.smtp.server;
           SMTP_PORT = toString cfg.smtp.port;
           SMTP_FROM_ADDRESS = "noreply@${cfg.web-domain}";
+          SECRET_KEY_BASE = secretKeyBase;
+          OTP_SECRET = otpSecret;
         };
         target-file = "/run/mastodon/common.env";
       };
