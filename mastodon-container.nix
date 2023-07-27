@@ -17,6 +17,10 @@ let
       config.instance.build-seed);
 
   proxyConf = pkgs.writeText "mastodon-nginx.conf" ''
+    events {
+      worker_connections 1024;
+    }
+
     http {
       upstream backend {
         server web:3000 fail_timeout=0;
