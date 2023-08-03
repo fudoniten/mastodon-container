@@ -129,7 +129,7 @@ in {
         type = str;
         description = "Docker image to use for Mastodon.";
         default =
-          "ghcr.io/mastodon/mastodon:${toplevel.config.services.mastodonContainer.version}";
+          "ghcr.io/tootsuite/mastodon:${toplevel.config.services.mastodonContainer.version}";
       };
 
       postgres = mkOption {
