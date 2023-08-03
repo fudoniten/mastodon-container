@@ -30,11 +30,11 @@ let
 
     http {
       upstream backend {
-        server mastodon-web:3000 fail_timeout=0;
+        server web:3000;
       }
 
       upstream streaming {
-        server mastodon-streaming:4000 fail_timeout=0;
+        server streaming:4000;
       }
 
       proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=CACHE:10m inactive=7d max_size=1g;
@@ -296,7 +296,7 @@ in {
           };
           web.service = {
             image = cfg.images.mastodon;
-            hostname = "mastodon-web";
+            hostname = "web";
             restart = "always";
             volumes = [
               "${cfg.state-directory}/mastodon:/mastodon/public/system"
@@ -318,7 +318,7 @@ in {
           };
           streaming.service = {
             image = cfg.images.mastodon;
-            hostname = "mastodon-streaming";
+            hostname = "streaming";
             restart = "always";
             command = "node ./streaming";
             healthcheck.test = [
