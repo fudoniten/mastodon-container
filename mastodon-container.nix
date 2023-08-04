@@ -303,12 +303,13 @@ in {
               "${cfg.state-directory}/mastodon:/mastodon/public/system"
               # "${cfg.state-directory}/mastodon-opt:/opt"
             ];
-            command = ''
-              bash -c "rm -f /mastodon/tmp/pids/server.pid; bundle exec rails s -p 3000"'';
-            healthcheck.test = [
-              "CMD-SHELL"
-              "wget -q --spider --proxy=off localhost:3000/health || exit 1"
-            ];
+            command = ''bash -c "while :; do echo 'kill me'; sleep 1; done"'';
+            # command = ''
+            #   bash -c "rm -f /mastodon/tmp/pids/server.pid; bundle exec rails s -p 3000"'';
+            # healthcheck.test = [
+            #   "CMD-SHELL"
+            #   "wget -q --spider --proxy=off localhost:3000/health || exit 1"
+            # ];
             depends_on = [ "postgres" "redis" ];
             networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.mastodon;
