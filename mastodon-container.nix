@@ -249,7 +249,7 @@ in {
           DB_USER = "mastodon";
           DB_NAME = "mastodon";
           DB_PASS = databasePasswd;
-        }) // cfg.environment;
+        } // cfg.environment);
         target-file = "/run/mastodon/mastodon.env";
       };
     };
