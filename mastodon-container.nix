@@ -162,6 +162,12 @@ in {
       default = 3000;
     };
 
+    environment = mkOption {
+      type = attrsOf str;
+      description = "Environment variables to set for the Mastodon job.";
+      default = { };
+    };
+
     smtp = {
       server = mkOption {
         type = str;
@@ -238,12 +244,12 @@ in {
         target-file = "/run/mastodon/postgres.env";
       };
       mastodonEnv = {
-        source-file = makeEnvFile {
+        source-file = makeEnvFile ({
           DB_HOST = "postgres";
           DB_USER = "mastodon";
           DB_NAME = "mastodon";
           DB_PASS = databasePasswd;
-        };
+        }) // cfg.environment;
         target-file = "/run/mastodon/mastodon.env";
       };
     };
@@ -259,10 +265,6 @@ in {
       mkUserMap = uid: "${toString uid}:${toString uid}";
       image = { pkgs, ... }: {
         project.name = "mastodon";
-        networks = {
-          internal_network.internal = true;
-          external_network.internal = false;
-        };
         services = {
           proxy.service = {
             image = cfg.images.nginx;
@@ -270,7 +272,6 @@ in {
             ports = [ "${toString cfg.port}:3000" ];
             volumes = [ "${proxyConf}:/etc/nginx/nginx.conf:ro,Z" ];
             depends_on = [ "web" "streaming" ];
-            networks = [ "internal_network" "external_network" ];
           };
           postgres.service = {
             image = cfg.images.postgres;
@@ -279,7 +280,6 @@ in {
               [ "${cfg.state-directory}/postgres:/var/lib/postgresql/data" ];
             healthcheck.test = [ "CMD" "pg_isready" "-U" "postgres" ];
             # environment.POSTGRES_HOST_AUTH_METHOD = "trust";
-            networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.postgres;
             env_file = [
               hostSecrets.mastodonCommonEnv.target-file
@@ -291,7 +291,6 @@ in {
             restart = "always";
             volumes = [ "${cfg.state-directory}/redis:/data" ];
             healthcheck.test = [ "CMD" "redis-cli" "ping" ];
-            networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.redis;
             env_file = [ hostSecrets.mastodonCommonEnv.target-file ];
           };
@@ -309,7 +308,6 @@ in {
               "wget -q --spider --proxy=off localhost:3000/health || exit 1"
             ];
             depends_on = [ "postgres" "redis" ];
-            networks = [ "internal_network" ];
             user = mkUserMap cfg.uids.mastodon;
             env_file = [
               hostSecrets.mastodonCommonEnv.target-file
