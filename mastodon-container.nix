@@ -265,6 +265,10 @@ in {
       mkUserMap = uid: "${toString uid}:${toString uid}";
       image = { pkgs, ... }: {
         project.name = "mastodon";
+        networks = {
+          internal_network.internal = true;
+          external_network.internal = false;
+        };
         services = {
           proxy.service = {
             image = cfg.images.nginx;
@@ -272,6 +276,7 @@ in {
             ports = [ "${toString cfg.port}:3000" ];
             volumes = [ "${proxyConf}:/etc/nginx/nginx.conf:ro,Z" ];
             depends_on = [ "web" "streaming" ];
+            networks = [ "external_network" "internal_network" ];
           };
           postgres.service = {
             image = cfg.images.postgres;
@@ -285,6 +290,7 @@ in {
               hostSecrets.mastodonCommonEnv.target-file
               hostSecrets.mastodonPostgresEnv.target-file
             ];
+            networks = [ "internal_network" ];
           };
           redis.service = {
             image = cfg.images.redis;
@@ -293,6 +299,7 @@ in {
             healthcheck.test = [ "CMD" "redis-cli" "ping" ];
             user = mkUserMap cfg.uids.redis;
             env_file = [ hostSecrets.mastodonCommonEnv.target-file ];
+            networks = [ "internal_network" ];
           };
           web.service = {
             image = cfg.images.mastodon;
@@ -313,6 +320,7 @@ in {
               hostSecrets.mastodonCommonEnv.target-file
               hostSecrets.mastodonEnv.target-file
             ];
+            networks = [ "internal_network" ];
           };
           streaming.service = {
             image = cfg.images.mastodon;
@@ -324,11 +332,11 @@ in {
               "wget -q --spider --proxy=off localhost:4000/api/v1/streaming/health || exit 1"
             ];
             depends_on = [ "postgres" "redis" ];
-            networks = [ "internal_network" ];
             env_file = [
               hostSecrets.mastodonCommonEnv.target-file
               hostSecrets.mastodonEnv.target-file
             ];
+            networks = [ "internal_network" ];
           };
           sidekiq.service = {
             image = cfg.images.mastodon;
@@ -339,12 +347,12 @@ in {
             healthcheck.test =
               [ "CMD-SHELL" "ps aux | grep '[s]idekiq 6' || false" ];
             depends_on = [ "postgres" "redis" ];
-            networks = [ "internal_network" "external_network" ];
             user = mkUserMap cfg.uids.mastodon;
             env_file = [
               hostSecrets.mastodonCommonEnv.target-file
               hostSecrets.mastodonEnv.target-file
             ];
+            networks = [ "internal_network" ];
           };
         };
       };
