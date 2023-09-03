@@ -283,7 +283,7 @@ in {
             restart = "always";
             volumes =
               [ "${cfg.state-directory}/postgres:/var/lib/postgresql/data" ];
-            healthcheck.test = [ "CMD" "pg_isready" "-U" "postgres" ];
+            healthcheck.test = [ "CMD" "pg_isready" "-U" "mastodon" ];
             # environment.POSTGRES_HOST_AUTH_METHOD = "trust";
             user = mkUserMap cfg.uids.postgres;
             env_file = [
