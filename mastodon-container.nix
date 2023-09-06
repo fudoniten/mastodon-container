@@ -254,12 +254,18 @@ in {
       };
     };
 
-    systemd.tmpfiles.rules = [
-      "d ${cfg.state-directory}/mastodon-opt 0700 mastodon          root - -"
-      "d ${cfg.state-directory}/mastodon     0700 mastodon          root - -"
-      "d ${cfg.state-directory}/postgres     0700 mastodon-postgres root - -"
-      "d ${cfg.state-directory}/redis        0700 mastodon-redis    root - -"
-    ];
+    systemd = {
+      tmpfiles.rules = [
+        "d ${cfg.state-directory}/mastodon-opt 0700 mastodon          root - -"
+        "d ${cfg.state-directory}/mastodon     0700 mastodon          root - -"
+        "d ${cfg.state-directory}/postgres     0700 mastodon-postgres root - -"
+        "d ${cfg.state-directory}/redis        0700 mastodon-redis    root - -"
+      ];
+      services.arion-mastodon = {
+        after = [ "network-online.target" ];
+        requires = [ "network-online.target" ];
+      };
+    };
 
     virtualisation.arion.projects.mastodon.settings = let
       mkUserMap = uid: "${toString uid}:${toString uid}";
