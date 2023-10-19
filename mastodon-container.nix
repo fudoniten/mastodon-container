@@ -358,7 +358,7 @@ in {
               hostSecrets.mastodonCommonEnv.target-file
               hostSecrets.mastodonEnv.target-file
             ];
-            networks = [ "internal_network" ];
+            networks = [ "internal_network" "external_network" ];
           };
         };
       };
