@@ -58,7 +58,7 @@ let
           try_files $uri @proxy;
         }
 
-        location ~ ^/(emoji|packs|system/accounts/avatars|system/media_attachments/files) {
+        location ~ /(emoji|packs|system/accounts/avatars|system/media_attachments/files) {
           add_header Cache-Control "public, max-age=31536000, immutable";
           add_header Strict-Transport-Security "max-age=31536000" always;
           try_files $uri @proxy;
@@ -201,21 +201,26 @@ in {
   };
 
   config = mkIf cfg.enable {
-    users.users = {
-      mastodon = {
-        isSystemUser = true;
-        group = "mastodon";
-        uid = cfg.uids.mastodon;
+    users = {
+      users = {
+        mastodon = {
+          isSystemUser = true;
+          group = "mastodon";
+          uid = cfg.uids.mastodon;
+        };
+        mastodon-postgres = {
+          isSystemUser = true;
+          group = "mastodon";
+          uid = cfg.uids.postgres;
+        };
+        mastodon-redis = {
+          isSystemUser = true;
+          group = "mastodon";
+          uid = cfg.uids.redis;
+        };
       };
-      mastodon-postgres = {
-        isSystemUser = true;
-        group = "mastodon";
-        uid = cfg.uids.postgres;
-      };
-      mastodon-redis = {
-        isSystemUser = true;
-        group = "mastodon";
-        uid = cfg.uids.redis;
+      groups.mastodon = {
+        members = [ "mastodon" "mastodon-postgres" "mastodon-redis" ];
       };
     };
 
@@ -290,7 +295,6 @@ in {
             volumes =
               [ "${cfg.state-directory}/postgres:/var/lib/postgresql/data" ];
             healthcheck.test = [ "CMD" "pg_isready" "-U" "mastodon" ];
-            # environment.POSTGRES_HOST_AUTH_METHOD = "trust";
             user = mkUserMap cfg.uids.postgres;
             env_file = [
               hostSecrets.mastodonCommonEnv.target-file
