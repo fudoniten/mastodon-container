@@ -277,8 +277,14 @@ in {
       image = { pkgs, ... }: {
         project.name = "mastodon";
         networks = {
-          internal_network.internal = true;
-          external_network.internal = false;
+          internal_network = {
+            internal = true;
+            dns_enabled = true;
+          };
+          external_network = {
+            internal = false;
+            dns_enabled = true;
+          };
         };
         services = {
           proxy.service = {
