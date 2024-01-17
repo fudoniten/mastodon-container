@@ -117,7 +117,7 @@ in {
       recommendedProxySettings = true;
       virtualHosts."${cfg.hostname}" = {
         locations."/" = {
-          proxyPass = "http://localhost:${cfg.port}";
+          proxyPass = "http://localhost:${toString cfg.port}";
           proxyWebsockets = true;
         };
       };
