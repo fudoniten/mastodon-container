@@ -36,6 +36,13 @@ in {
       default = [ ];
     };
 
+    streaming-processes = mkOption {
+      type = int;
+      description =
+        "Number of processes to use for Mastodon streaming. Recommended is (#cores - 1).";
+      default = 4;
+    };
+
     smtp = {
       host = mkOption {
         type = str;
@@ -105,6 +112,7 @@ in {
                     database.createLocally = true;
                     configureNginx = true;
                     automaticMigrations = true;
+                    streamingProcesses = cfg.streaming-processes;
                   };
                 };
               };
