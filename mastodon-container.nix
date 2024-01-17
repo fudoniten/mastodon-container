@@ -26,7 +26,7 @@ in {
     port = mkOption {
       type = port;
       description = "Port at which to serve Mastodon web requests.";
-      default = 3000;
+      default = 55001;
     };
 
     environment-files = mkOption {
@@ -51,10 +51,11 @@ in {
       user = mkOption {
         type = str;
         description = "User as which to authenticate to the SMTP server.";
+        default = "mastodon";
       };
 
       password-file = mkOption {
-        type = str;
+        type = nullOr str;
         description = "Path to file containing SMTP password";
       };
 
@@ -90,12 +91,13 @@ in {
                 postgresql.enable = true;
                 mastodon = {
                   enable = true;
+                  webPort = cfg.port;
                   localDomain = cfg.domain;
                   extraEnvFiles = cfg.environment-files;
                   smtp = {
                     inherit (cfg.smtp) host port user;
                     fromAddress = cfg.smtp.from-address;
-                    authenticate = true;
+                    authenticate = !isNull cfg.smtp.password-file;
                     passwordFile = cfg.smtp.password-file;
                   };
                   redis.createLocally = true;
