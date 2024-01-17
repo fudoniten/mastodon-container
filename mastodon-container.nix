@@ -114,6 +114,12 @@ in {
                     automaticMigrations = true;
                     streamingProcesses = cfg.streaming-processes;
                   };
+                  nginx = {
+                    virtualHosts."${cfg.hostname}" = {
+                      forceSSL = false;
+                      enableACME = false;
+                    };
+                  };
                 };
               };
             };
@@ -126,6 +132,8 @@ in {
       enable = true;
       recommendedProxySettings = true;
       virtualHosts."${cfg.hostname}" = {
+        enableACME = true;
+        forceSSL = true;
         locations."/" = {
           proxyPass = "http://localhost:${toString cfg.port}";
           proxyWebsockets = true;
