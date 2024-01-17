@@ -4,7 +4,7 @@ with lib;
 let cfg = config.services.mastodonContainer;
 in {
 
-  options.services.mastodonContainer = {
+  options.services.mastodonContainer = with types; {
     enable = mkEnableOption "Enable Mastodon running in an Arion container.";
 
     domain = mkOption {
