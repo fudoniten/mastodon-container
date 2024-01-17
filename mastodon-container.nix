@@ -74,7 +74,6 @@ in {
         project.name = "mastodon";
         services = {
           mastodon = { pkgs, ... }: {
-            useSystemd = true;
             service = {
               restart = "always";
               volumes = [
@@ -83,27 +82,30 @@ in {
                 "mastodon-data:/var/lib/mastodon"
               ];
             };
-            configuration = {
-              boot.tmp.useTmpfs = true;
-              system.nssModules = mkForce [ ];
-              services = {
-                nscd.enable = false;
-                postgresql.enable = true;
-                mastodon = {
-                  enable = true;
-                  webPort = cfg.port;
-                  localDomain = cfg.domain;
-                  extraEnvFiles = cfg.environment-files;
-                  smtp = {
-                    inherit (cfg.smtp) host port user;
-                    fromAddress = cfg.smtp.from-address;
-                    authenticate = !isNull cfg.smtp.password-file;
-                    passwordFile = cfg.smtp.password-file;
+            nixos = {
+              useSystemd = true;
+              configuration = {
+                boot.tmp.useTmpfs = true;
+                system.nssModules = mkForce [ ];
+                services = {
+                  nscd.enable = false;
+                  postgresql.enable = true;
+                  mastodon = {
+                    enable = true;
+                    webPort = cfg.port;
+                    localDomain = cfg.domain;
+                    extraEnvFiles = cfg.environment-files;
+                    smtp = {
+                      inherit (cfg.smtp) host port user;
+                      fromAddress = cfg.smtp.from-address;
+                      authenticate = !isNull cfg.smtp.password-file;
+                      passwordFile = cfg.smtp.password-file;
+                    };
+                    redis.createLocally = true;
+                    database.createLocally = true;
+                    configureNginx = true;
+                    automaticMigrations = true;
                   };
-                  redis.createLocally = true;
-                  database.createLocally = true;
-                  configureNginx = true;
-                  automaticMigrations = true;
                 };
               };
             };
