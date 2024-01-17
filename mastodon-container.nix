@@ -310,6 +310,7 @@ in {
           };
           redis.service = {
             image = cfg.images.redis;
+            hostname = "redis";
             restart = "always";
             volumes = [ "${cfg.state-directory}/redis:/data" ];
             healthcheck.test = [ "CMD" "redis-cli" "ping" ];
