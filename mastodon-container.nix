@@ -142,7 +142,7 @@ in {
         enableACME = true;
         forceSSL = true;
         locations."/" = {
-          proxyPass = "http://127.0.0.1::${toString cfg.port}/";
+          proxyPass = "http://127.0.0.1:${toString cfg.port}/";
           proxyWebsockets = true;
           recommendedProxySettings = true;
         };
