@@ -80,6 +80,11 @@ in {
     virtualisation.arion.projects.mastodon.settings = let
       image = { pkgs, ... }: {
         project.name = "mastodon";
+        docker-compose.volumes = {
+          postgres-data = { };
+          redis-data = { };
+          mastodon-data = { };
+        };
         services = {
           mastodon = { pkgs, ... }: {
             service = {
