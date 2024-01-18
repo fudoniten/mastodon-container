@@ -94,6 +94,7 @@ in {
                 "redis-data:/var/lib/redis"
                 "mastodon-data:/var/lib/mastodon"
               ];
+              ports = [ "${toString cfg.port}:80" ];
             };
             nixos = {
               useSystemd = true;
