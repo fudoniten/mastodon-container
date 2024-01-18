@@ -138,13 +138,13 @@ in {
 
     services.nginx = {
       enable = true;
-      recommendedProxySettings = true;
       virtualHosts."${cfg.hostname}" = {
         enableACME = true;
         forceSSL = true;
         locations."/" = {
-          proxyPass = "http://localhost:${toString cfg.port}";
+          proxyPass = "http://localhost:${toString cfg.port}/";
           proxyWebsockets = true;
+          recommendedProxySettings = true;
         };
       };
     };
