@@ -64,6 +64,7 @@ in {
       password-file = mkOption {
         type = nullOr str;
         description = "Path to file containing SMTP password";
+        default = null;
       };
 
       from-address = mkOption {
@@ -106,7 +107,8 @@ in {
                       inherit (cfg.smtp) host port user;
                       fromAddress = cfg.smtp.from-address;
                       authenticate = !isNull cfg.smtp.password-file;
-                      passwordFile = cfg.smtp.password-file;
+                      passwordFile = mkIf (!isNull cfg.smtp.password-file)
+                        cfg.smtp.password-file;
                     };
                     redis.createLocally = true;
                     database.createLocally = true;
