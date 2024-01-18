@@ -180,11 +180,12 @@ in {
                             proxy_buffering on;
                             proxy_redirect off;
 
-                            proxy_cache CACHE;
-                            proxy_cache_valid 200 7d;
-                            proxy_cache_valid 410 24h;
-                            proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
-                            add_header X-Cached $upstream_cache_status;
+                            ## TODO: consider uncommenting
+                            # proxy_cache CACHE;
+                            # proxy_cache_valid 200 7d;
+                            # proxy_cache_valid 410 24h;
+                            # proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+                            # add_header X-Cached $upstream_cache_status;
 
                             tcp_nodelay on;
                           '';
