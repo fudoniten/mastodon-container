@@ -164,7 +164,6 @@ in {
                             proxy_set_header X-Forwarded-Proto $scheme;
                             proxy_buffering off;
                             proxy_redirect off;
-                            proxy_http_version 1.1;
                             add_header Strict-Transport-Security "max-age=63072000; includeSubDomains";
                             tcp_nodelay on;
                           '';
@@ -180,7 +179,6 @@ in {
 
                             proxy_buffering on;
                             proxy_redirect off;
-                            proxy_http_version 1.1;
 
                             proxy_cache CACHE;
                             proxy_cache_valid 200 7d;
