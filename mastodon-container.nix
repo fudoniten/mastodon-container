@@ -146,13 +146,15 @@ in {
                               "immutable"
                             else
                               "must-revalidate";
-                          in ''
-                            add_header Cache-Control "public, max-age=${
-                              toString maxAge
-                            }, ${immutableString}";
-                            add_header Strict-Transport-Security "max-age=63072000; includeSubDomains";
-                            try_files $uri =404;
-                          '';
+                          in {
+                            extraConfig = ''
+                              add_header Cache-Control "public, max-age=${
+                                toString maxAge
+                              }, ${immutableString}";
+                              add_header Strict-Transport-Security "max-age=63072000; includeSubDomains";
+                              try_files $uri =404;
+                            '';
+                          };
                       in {
                         "/api/v1/streaming" = {
                           extraConfig = ''
