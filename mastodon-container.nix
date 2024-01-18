@@ -93,7 +93,8 @@ in {
                 "postgres-data:/var/lib/postgres/data"
                 "redis-data:/var/lib/redis"
                 "mastodon-data:/var/lib/mastodon"
-              ];
+              ] ++ (map (env-file: "${env-file}:${env-file},ro")
+                cfg.environment-files);
               ports = [ "${toString cfg.port}:80" ];
             };
             nixos = {
