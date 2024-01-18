@@ -139,6 +139,17 @@ in {
 
     services.nginx = {
       enable = true;
+      commonHttpConfig = ''
+        log_format with_response_time '$remote_addr - $remote_user [$time_local] '
+                     '"$request" $status $body_bytes_sent '
+                     '"$http_referer" "$http_user_agent" '
+                     '"$request_time" "$upstream_response_time"';
+        access_log /var/log/nginx/access.log with_response_time;
+      '';
+      recommendedTlsSettings = true;
+      recommendedGzipSettings = true;
+      recommendedOptimisation = true;
+      recommendedProxySettings = true;
       virtualHosts."${cfg.hostname}" = {
         enableACME = true;
         forceSSL = true;
