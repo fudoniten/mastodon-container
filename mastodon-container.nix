@@ -2,6 +2,7 @@
 
 with lib;
 let cfg = config.services.mastodonContainer;
+
 in {
 
   options.services.mastodonContainer = with types; {
@@ -138,6 +139,67 @@ in {
                     virtualHosts."${cfg.hostname}" = {
                       forceSSL = false;
                       enableACME = false;
+                      locations = let
+                        mkCacheLine = { maxAge ? 2419200, immutable ? false }:
+                          let
+                            immutableString = if immutable then
+                              "immutable"
+                            else
+                              "must-revalidate";
+                          in ''
+                            add_header Cache-Control "public, max-age=${
+                              toString maxAge
+                            }, ${immutableString}";
+                            add_header Strict-Transport-Security "max-age=63072000; includeSubDomains";
+                            try_files $uri =404;
+                          '';
+                      in {
+                        "/api/v1/streaming" = {
+                          extraConfig = ''
+                            proxy_set_header Host $host;
+                            proxy_set_header X-Real-IP $remote_addr;
+                            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                            proxy_set_header X-Forwarded-Proto $scheme;
+                            proxy_buffering off;
+                            proxy_redirect off;
+                            proxy_http_version 1.1;
+                            add_header Strict-Transport-Security "max-age=63072000; includeSubDomains";
+                            tcp_nodelay on;
+                          '';
+
+                        };
+                        "@proxy" = {
+                          extraConfig = ''
+                            proxy_set_header Host $host;
+                            proxy_set_header X-Real-IP $remote_addr;
+                            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                            proxy_set_header X-Forwarded-Proto https; # NOTE: Lie and say we're on HTTPS! Otherwise Mastodon will refuse to serve.
+                            proxy_pass_header Server;
+
+                            proxy_buffering on;
+                            proxy_redirect off;
+                            proxy_http_version 1.1;
+
+                            proxy_cache CACHE;
+                            proxy_cache_valid 200 7d;
+                            proxy_cache_valid 410 24h;
+                            proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+                            add_header X-Cached $upstream_cache_status;
+
+                            tcp_nodelay on;
+                          '';
+                        };
+
+                        "/sw.js" = mkCacheLine { maxAge = 604800; };
+                        "^/assets/" = mkCacheLine { };
+                        "^/avatars/" = mkCacheLine { };
+                        "^/emoji/" = mkCacheLine { };
+                        "^/headers/" = mkCacheLine { };
+                        "^/packs" = mkCacheLine { };
+                        "^/shortcuts" = mkCacheLine { };
+                        "^/sounds/" = mkCacheLine { };
+                        "^/system" = mkCacheLine { immutable = true; };
+                      };
                     };
                   };
                 };
