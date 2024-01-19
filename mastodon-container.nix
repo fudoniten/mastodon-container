@@ -44,6 +44,12 @@ in {
       default = 4;
     };
 
+    nameservers = mkOption {
+      type = listOf str;
+      description = "Nameservers to use for DNS resolution.";
+      default = [ "1.1.1.1" ];
+    };
+
     smtp = {
       host = mkOption {
         type = str;
@@ -105,6 +111,7 @@ in {
               configuration = {
                 boot.tmp.useTmpfs = true;
                 system.nssModules = mkForce [ ];
+                networking.nameservers = cfg.nameservers;
                 services = {
                   nscd.enable = false;
                   postgresql.enable = true;
