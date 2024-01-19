@@ -86,6 +86,7 @@ in {
           redis-data = { };
           mastodon-data = { };
         };
+        networks.external_network.internal = false;
         services = {
           mastodon = { pkgs, ... }: {
             service = {
@@ -97,6 +98,7 @@ in {
               ] ++ (map (env-file: "${env-file}:${env-file}:ro,Z")
                 cfg.environment-files);
               ports = [ "${toString cfg.port}:80" ];
+              networks = [ "external_network" ];
             };
             nixos = {
               useSystemd = true;
