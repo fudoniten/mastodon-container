@@ -105,7 +105,7 @@ in {
               configuration = {
                 boot.tmp.useTmpfs = true;
                 system.nssModules = mkForce [ ];
-                environment.systemPackages = with pkgs; [ nmap telnet ];
+                environment.systemPackages = with pkgs; [ nmap inetutils ];
                 services = {
                   nscd.enable = false;
                   postgresql.enable = true;
