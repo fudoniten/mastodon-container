@@ -158,9 +158,6 @@ in {
                       in {
                         "/api/v1/streaming" = {
                           extraConfig = ''
-                            proxy_set_header Host $host;
-                            proxy_set_header X-Real-IP $remote_addr;
-                            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                             proxy_set_header X-Forwarded-Proto $scheme;
                             proxy_buffering off;
                             proxy_redirect off;
@@ -171,16 +168,13 @@ in {
                         };
                         "@proxy" = {
                           extraConfig = ''
-                            proxy_set_header Host $host;
-                            proxy_set_header X-Real-IP $remote_addr;
-                            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                             proxy_set_header X-Forwarded-Proto https; # NOTE: Lie and say we're on HTTPS! Otherwise Mastodon will refuse to serve.
                             proxy_pass_header Server;
 
                             proxy_buffering on;
                             proxy_redirect off;
 
-                            ## TODO: consider uncommenting
+                            ## TODO: consider uncommentingq
                             # proxy_cache CACHE;
                             # proxy_cache_valid 200 7d;
                             # proxy_cache_valid 410 24h;
