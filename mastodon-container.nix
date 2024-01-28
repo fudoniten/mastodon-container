@@ -128,7 +128,7 @@ in {
                     configureNginx = true;
                     automaticMigrations = true;
                     streamingProcesses = cfg.streaming-processes;
-                    extraConfig.registrations_open = !cfg.closed-registrations;
+                    extraConfig.registrations_open = !cfg.close-registrations;
                   };
                   nginx = {
                     recommendedTlsSettings = true;
