@@ -44,8 +44,11 @@ in {
       default = 4;
     };
 
-    close-registrations =
-      mkEnableOption "Disable the creation of new accounts.";
+    allow-registrations = mkOption {
+      type = bool;
+      description = "Enable the creation of new accounts.";
+      default = true;
+    };
 
     smtp = {
       host = mkOption {
@@ -128,7 +131,7 @@ in {
                     configureNginx = true;
                     automaticMigrations = true;
                     streamingProcesses = cfg.streaming-processes;
-                    extraConfig.registrations_open = !cfg.close-registrations;
+                    extraConfig.registrations_open = !cfg.allow-registrations;
                   };
                   nginx = {
                     recommendedTlsSettings = true;
