@@ -2,7 +2,7 @@
   description = "Mastodon running in a container";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-23.05";
+    nixpkgs.url = "nixpkgs/nixos-23.11";
     arion.url = "github:hercules-ci/arion";
   };
 

@@ -44,6 +44,9 @@ in {
       default = 4;
     };
 
+    close-registrations =
+      mkEnableOption "Disable the creation of new accounts.";
+
     smtp = {
       host = mkOption {
         type = str;
@@ -105,7 +108,6 @@ in {
               configuration = {
                 boot.tmp.useTmpfs = true;
                 system.nssModules = mkForce [ ];
-                environment.systemPackages = with pkgs; [ dig inetutils ];
                 services = {
                   nscd.enable = false;
                   postgresql.enable = true;
@@ -126,6 +128,7 @@ in {
                     configureNginx = true;
                     automaticMigrations = true;
                     streamingProcesses = cfg.streaming-processes;
+                    extraConfig.registrations_open = !cfg.closed-registrations;
                   };
                   nginx = {
                     recommendedTlsSettings = true;
