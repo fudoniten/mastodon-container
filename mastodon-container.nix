@@ -98,7 +98,7 @@ in {
             service = {
               restart = "always";
               volumes = [
-                "postgres-data:/var/lib/postgres/data"
+                "postgres-data:/var/lib/postgresql"
                 "redis-data:/var/lib/redis"
                 "mastodon-data:/var/lib/mastodon"
               ] ++ (map (env-file: "${env-file}:${env-file}:ro,Z")
