@@ -132,7 +132,7 @@ in {
                     automaticMigrations = true;
                     streamingProcesses = cfg.streaming-processes;
                     extraConfig.registrations_open =
-                      if cfg.allow_registrations then "true" else "false";
+                      if cfg.allow-registrations then "true" else "false";
                   };
                   nginx = {
                     recommendedTlsSettings = true;
