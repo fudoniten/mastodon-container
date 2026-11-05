@@ -103,7 +103,9 @@ in {
                 "mastodon-data:/var/lib/mastodon"
               ] ++ (map (env-file: "${env-file}:${env-file}:ro,Z")
                 cfg.environment-files);
-              ports = [ "${toString cfg.port}:80" ];
+              # Loopback only: the host nginx below proxies to 127.0.0.1, and
+              # a podman-published port bypasses the host firewall.
+              ports = [ "127.0.0.1:${toString cfg.port}:80" ];
               networks = [ "external_network" ];
             };
             nixos = {
