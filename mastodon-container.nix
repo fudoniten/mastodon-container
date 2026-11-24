@@ -179,8 +179,22 @@ in {
 
                         };
                         "@proxy" = {
+                          # TLS ends at the host nginx, so $scheme in here is
+                          # always "http". The recommended headers include
+                          # `X-Forwarded-Proto $scheme`, which nginx sends as a
+                          # second header *after* the one below; Rack 3 trusts
+                          # the last value, Rails' force_ssl sees "http", and
+                          # every request 301s back to https://<domain>/ in a
+                          # loop. So turn the include off here and set the
+                          # same headers by hand, with the proto pinned.
+                          recommendedProxySettings = false;
                           extraConfig = ''
+                            proxy_set_header Host $host;
+                            proxy_set_header X-Real-IP $remote_addr;
+                            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                             proxy_set_header X-Forwarded-Proto https; # NOTE: Lie and say we're on HTTPS! Otherwise Mastodon will refuse to serve.
+                            proxy_set_header X-Forwarded-Host $host;
+                            proxy_set_header X-Forwarded-Server $hostname;
                             proxy_pass_header Server;
 
                             proxy_buffering on;
