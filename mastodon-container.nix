@@ -99,7 +99,11 @@ in {
               restart = "always";
               volumes = [
                 "postgres-data:/var/lib/postgresql"
-                "redis-data:/var/lib/redis"
+                # services.redis.servers.mastodon keeps its dump in
+                # /var/lib/redis-mastodon, not /var/lib/redis, so the old
+                # mount point persisted nothing and Sidekiq's queues
+                # (retries, scheduled jobs) vanished with every restart.
+                "redis-data:/var/lib/redis-mastodon"
                 "mastodon-data:/var/lib/mastodon"
               ] ++ (map (env-file: "${env-file}:${env-file}:ro,Z")
                 cfg.environment-files);
@@ -148,9 +152,14 @@ in {
                                    '"$request_time" "$upstream_response_time"';
                       access_log /var/log/nginx/access.log with_response_time;
                     '';
-                    virtualHosts."${cfg.hostname}" = {
+                    # Must match the stock module's vhost name (localDomain),
+                    # or these overrides land on a second, unused vhost.
+                    virtualHosts."${cfg.domain}" = {
                       forceSSL = false;
                       enableACME = false;
+                      # Mastodon accepts uploads up to 99MB (video); the
+                      # nginx default of 10m turns those into 413s.
+                      extraConfig = "client_max_body_size 100m;";
                       locations = let
                         mkCacheLine = { maxAge ? 2419200, immutable ? false }:
                           let
@@ -211,15 +220,19 @@ in {
                           '';
                         };
 
+                        # These used to be keyed "^/assets/" etc. with no "~",
+                        # which nginx reads as literal prefixes that never
+                        # match, so none of this caching applied. /system/
+                        # (uploaded media) is left to the stock module's
+                        # alias location: a try_files under the package's
+                        # public/ root would 404 it.
                         "/sw.js" = mkCacheLine { maxAge = 604800; };
-                        "^/assets/" = mkCacheLine { };
-                        "^/avatars/" = mkCacheLine { };
-                        "^/emoji/" = mkCacheLine { };
-                        "^/headers/" = mkCacheLine { };
-                        "^/packs" = mkCacheLine { };
-                        "^/shortcuts" = mkCacheLine { };
-                        "^/sounds/" = mkCacheLine { };
-                        "^/system" = mkCacheLine { immutable = true; };
+                        "~ ^/assets/" = mkCacheLine { };
+                        "~ ^/avatars/" = mkCacheLine { };
+                        "~ ^/emoji/" = mkCacheLine { };
+                        "~ ^/headers/" = mkCacheLine { };
+                        "~ ^/packs" = mkCacheLine { };
+                        "~ ^/sounds/" = mkCacheLine { };
                       };
                     };
                   };
@@ -236,6 +249,7 @@ in {
       virtualHosts."${cfg.hostname}" = {
         enableACME = true;
         forceSSL = true;
+        extraConfig = "client_max_body_size 100m;";
         locations."/" = {
           proxyPass = "http://127.0.0.1:${toString cfg.port}/";
           proxyWebsockets = true;
