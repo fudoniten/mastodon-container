@@ -115,11 +115,21 @@ in {
             nixos = {
               useSystemd = true;
               configuration = {
+                # Without these, the container's stateVersion follows
+                # nixpkgs, and with it the PostgreSQL major version. Each
+                # bump (15 -> 16 -> 17) silently initdb'd an empty cluster
+                # next to the old one in postgres-data. Pin both; change the
+                # Postgres package only together with a pg_upgrade or a
+                # dump/restore.
+                system.stateVersion = "25.11";
                 boot.tmp.useTmpfs = true;
                 system.nssModules = mkForce [ ];
                 services = {
                   nscd.enable = false;
-                  postgresql.enable = true;
+                  postgresql = {
+                    enable = true;
+                    package = pkgs.postgresql_17;
+                  };
                   mastodon = {
                     enable = true;
                     webPort = cfg.port;
